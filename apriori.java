@@ -22,9 +22,9 @@ public class apriori {
         Map<Integer, Set<Integer>> transactionDB = new HashMap<Integer, Set<Integer>>();
         while(input.hasNextLine()) {
             String transaction = input.nextLine();
-            String[] transactionSplit = transaction.split("\\s");
-            int transID = Integer.parseInt(transactionSplit[0]);
-            // transactionSplit[1] not needed
+            String[] transactionSplit = transaction.split("\\s"); // Split on every whitespace character (tab or space)
+            int transID = Integer.parseInt(transactionSplit[0]); // TransactionID will always be the first value
+            // transactionSplit[1] not needed (size of transaction)
             Set<Integer> transItems = new HashSet<>();
             for (int i = 2; i < transactionSplit.length; i++) {
                 transItems.add(Integer.parseInt(transactionSplit[i]));
@@ -42,16 +42,27 @@ public class apriori {
         outputToFile(fps);
     }
 
+    /**
+     * Conducts the apriori method of data mining on a transaction database according to the minimum support.
+     * @param T Transaction Database
+     * @param min_sup Minimum support needed for a value to appear
+     * @return Returns the completed FPs in a Map
+     */
     private static Map<Set<Integer>, Integer> apriori(Map<Integer, Set<Integer>> T, int min_sup) {
         // Make the large 1-itemsets, also acts as L_k
         Map<Set<Integer>, Integer> itemset = new HashMap<Set<Integer>, Integer>();
+
+        // Our FP map to store the values that meet min_sup. LinkedHashMap so that it remembers order of insertion.
+        Map<Set<Integer>, Integer> FPs = new LinkedHashMap<Set<Integer>, Integer>();
 
         // Get all the keys so we can iterate through the transaction database
         Set<Integer> keys = T.keySet();
         Iterator<Integer> transiterator = keys.iterator();
 
         // Iterate through the transaction database
-        // Count all the occurances of each item in the and store in itemset
+        // Count all the occurances of each item in the database and either add one to the current value or inset it into the table
+        // Advantage of adding as we go along is that we don't have memory allocated for "0s" that will get pruned later
+        // As well it's less to iterate through when we do begin pruning
         while (transiterator.hasNext()) {
             int hashKey = transiterator.next();
             Set<Integer> transaction = T.get(hashKey);
@@ -73,6 +84,9 @@ public class apriori {
         // First prune
         pruneMin(itemset, min_sup);
 
+        // Add to our final set
+        FPs.putAll(itemset);
+
         // Variables needed to know when we've run out of possible candidates
         boolean go = true;
         int k = 2;
@@ -81,7 +95,7 @@ public class apriori {
         while(go) {
             Map<Set<Integer>, Integer> candidate = apriori_gen(itemset, k);
 
-            // Reset out iterator for another pass through the transDB
+            // Reset our iterator for another pass through the transDB
             transiterator = keys.iterator();
 
             // Iterate through the transactionDB for our candidates and count them
@@ -106,6 +120,10 @@ public class apriori {
             pruneMin(candidate, min_sup);
 
             // Union the pruned candidates into the set of already scanned and pruned candidates
+            FPs.putAll(candidate);
+
+            // Clear itemset for next iteration and update with previous candidates to be gen'd
+            itemset.clear();
             itemset.putAll(candidate);
 
             k++;
@@ -113,10 +131,15 @@ public class apriori {
                 go = false;
             }
         }
-        return itemset;
+        return FPs;
     }
 
-    // Generates the candidate sets for counting against the transactionDB
+    /**
+     * Generates the next candidate set to be used in the algorithm
+     * @param itemset Current set of keys to be joined to each other
+     * @param k Set size (k = 2 joins all combinations of length 2)
+     * @return Returns the candidate set ready to be counted against the transaction database
+     */
     private static Map<Set<Integer>,Integer> apriori_gen(Map<Set<Integer>, Integer> itemset, int k) {
         Map<Set<Integer>, Integer> candidate = new HashMap<Set<Integer>, Integer>();
 
