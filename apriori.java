@@ -143,11 +143,11 @@ public class apriori {
     private static Map<Set<Integer>,Integer> apriori_gen(Map<Set<Integer>, Integer> itemset, int k) {
         Map<Set<Integer>, Integer> candidate = new HashMap<Set<Integer>, Integer>();
 
+        // Get our keyset to iterate through the itemset
         Set<Set<Integer>> itemKeys = itemset.keySet();
-        Iterator<Set<Integer>> itemIter = itemKeys.iterator();;
+        Iterator<Set<Integer>> itemIter = itemKeys.iterator();
 
-        // This is the stupid thing that generates the sets of candidates by size
-        // I doubt this is very efficient, but it works
+        // Generates the candidates, stupid stupid stupid inefficient sad
         while (itemIter.hasNext()) {
 
             Set<Integer> hashKey = itemIter.next();
@@ -158,11 +158,14 @@ public class apriori {
                 Set<Integer> newSet = new HashSet<>();
                 newSet.addAll(hashKey);
                 newSet.addAll(hashKey2);
+                
+                System.out.println(newSet);
 
                 if (newSet.size() >= k) {
                     candidate.put(newSet, 0);
                 }
             }
+            itemIter.remove();
         }
 
         return candidate;
