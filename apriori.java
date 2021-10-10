@@ -6,6 +6,8 @@ public class apriori {
     public static void main(String[] args) throws FileNotFoundException {
     
         File dataSet;
+        int min_sup_percentage;
+        float min_sup_float;
         int min_sup;
 
         if (args.length != 2) {
@@ -13,11 +15,17 @@ public class apriori {
             return;
         } else {
             dataSet = new File(args[0]);
-            min_sup = Integer.parseInt(args[1]);
+            min_sup_percentage = Integer.parseInt(args[1]);
+            if (min_sup_percentage > 100 || min_sup_percentage < 0) {
+                System.out.println("Cannot have more than 100% or less than 0% min_sup. Exiting.");
+            }
         }
 
         Scanner input = new Scanner(dataSet);
         NUMBER_OF_TRANSACTIONS = Integer.parseInt(input.nextLine());
+
+        min_sup_float = NUMBER_OF_TRANSACTIONS * (min_sup_percentage / 100f);
+        min_sup = Math.round(min_sup_float);
 
         Map<Integer, Set<Integer>> transactionDB = new HashMap<Integer, Set<Integer>>();
         while(input.hasNextLine()) {
@@ -148,18 +156,22 @@ public class apriori {
         Iterator<Set<Integer>> itemIter = itemKeys.iterator();
 
         // Generates the candidates, stupid stupid stupid inefficient sad
+        // Does this by first: taking the initial set of candidates
+        // Duplicating the set
+        // Then multiplying the duplicated set into the initial set
+        // And turfing the results that are bigger than size k
+        // Sets automatically disallow duplicates, so there is no chance of [1, 1, 2] results
         while (itemIter.hasNext()) {
 
             Set<Integer> hashKey = itemIter.next();
             Iterator<Set<Integer>> iter2 = itemKeys.iterator();
+
 
             while(iter2.hasNext()) {
                 Set<Integer> hashKey2 = iter2.next();
                 Set<Integer> newSet = new HashSet<>();
                 newSet.addAll(hashKey);
                 newSet.addAll(hashKey2);
-                
-                System.out.println(newSet);
 
                 if (newSet.size() >= k) {
                     candidate.put(newSet, 0);
@@ -201,14 +213,3 @@ public class apriori {
         return true;
     }
 }
-
-
-/*
-| Ti | Values
----------------------
-| 1 | {1, 3, 4}
-| 2 | {2, 3, 5}
-| 3 | {1, 2, 3, 5}
-| 4 | {2, 5}
----------------------
-*/
