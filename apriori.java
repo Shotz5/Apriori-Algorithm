@@ -156,10 +156,10 @@ public class apriori {
         Iterator<Set<Integer>> itemIter = itemKeys.iterator();
 
         // Generates the candidates, stupid stupid stupid inefficient sad
-        // Does this by first: taking the initial set of candidates
+        // Does this by first: taking the previous set of candidates
         // Duplicating the set
         // Then multiplying the duplicated set into the initial set
-        // And turfing the results that are bigger than size k
+        // And turfing the results that are smaller than size k
         // Sets automatically disallow duplicates, so there is no chance of [1, 1, 2] results
         while (itemIter.hasNext()) {
 
@@ -173,7 +173,7 @@ public class apriori {
                 newSet.addAll(hashKey);
                 newSet.addAll(hashKey2);
 
-                if (newSet.size() >= k) {
+                if (newSet.size() == k) {
                     candidate.put(newSet, 0);
                 }
             }
